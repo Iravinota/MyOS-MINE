@@ -70,9 +70,11 @@ total 4
 - 注释掉 sound, ata0-master
 - 启动bochs时可以直接执行`bochs`命令，默认加载.bochsrc配置文件。书中启动的命令不对。
 
-## 7. 书中3.1.2节中代码解释
+## 7. 书中代码解释
 
-`jmp $` 表示无限循环。
+- `jmp $` 表示无限循环
+- `mov byte[bp-2], cl` bp指向data stack，[]表示寻址，[bp-2]就是stack中向下的2个字节处的地址。这条指令把cl的值放到指定的stack位置中
+- `mov bl, [BPB_SecPerTrk]` 把变量BPB_SecPerTrk的值存放到bl中
 
 ## 8. FAT12文件系统
 
@@ -81,3 +83,35 @@ total 4
 参看[FAT12文件系统简介](https://blog.csdn.net/xhyzjiji/article/details/49027013)
 
 参看[FAT File Systems](http://www.ntfs.com/fat-systems.htm)
+
+## 9. LBA<==>CHS转换
+
+书中的公式不对，柱面号=Q>>1，磁头号=Q&1。可以参看[这里](https://blog.csdn.net/G_Spider/article/details/6906184)。
+
+书中没有说明的很重要的一点是：**磁盘填充，先填满一个柱面之后，再填下一个柱面**，以及LBA是从0开始的。
+
+``` math
+LBA = (C-CS)*HPC*SPT + (H-HS)*SPT + (S-SS)
+
+C, H, S: 当前的CHS值
+CS, HS, SS: Cylinder, Head, Sector的起始编号。一般来说，CS=0，HS=0，SS=1
+HPC: Heads Per Cylinder，每个柱面磁头数，也就是每个柱面磁道数
+SPT: Sectors Per Track，每个磁道扇区数
+
+SPT > (S-SS) 一定成立
+HPC > (H-HS) 一定成立
+
+一般来说，CS=0，HS=0，SS=1，因此可以得出
+LBA = C*HPC*SPT + H*SPT + (S-1)
+
+以及 HPC > (H-0)，即 HPC > H
+
+因此：
+S = LBA%SPT + 1
+H = LBA/SPT%HPC
+C = LBA/SPT/HPC
+
+软盘中，HPC=2，所以：
+C = (LBA/SPT) >> 1
+H = (LBA/SPT) & 1
+```
