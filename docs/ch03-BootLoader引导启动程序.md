@@ -75,6 +75,11 @@ total 4
 - `jmp $` 表示无限循环
 - `mov byte[bp-2], cl` bp指向data stack，[]表示寻址，[bp-2]就是stack中向下的2个字节处的地址。这条指令把cl的值放到指定的stack位置中
 - `mov bl, [BPB_SecPerTrk]` 把变量BPB_SecPerTrk的值存放到bl中
+- `BaseOfStack equ 0x7c00` **equ**相当于宏定义，和用dw定义的变量不同。一般不会放到[]中使用
+- Label相当于地址，一般以`jmp Label`方式使用
+- `SectorNo dw 0` 定义变量，一般会以`[SectorNo]`方式使用
+- `RootDirSizeForLoop dw RootDirSectors` 中，`RootDirSectors`是宏定义，所以此语句意义为`RootDirSizeForLoop dw 14`
+- *持续更新*
 
 ## 8. FAT12文件系统
 

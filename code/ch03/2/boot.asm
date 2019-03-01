@@ -20,7 +20,7 @@ BaseOfStack	equ	0x7c00
 BaseOfLoader	equ	0x1000
 OffsetOfLoader	equ	0x00
 
-RootDirSectors	equ	14
+RootDirSectors	equ	14              ; BPB_RootEntCnt*32/512=14
 SectorNumOfRootDirStart	equ	19
 SectorNumOfFAT1Start	equ	1
 SectorBalance	equ	17	
@@ -90,6 +90,12 @@ Label_Start:
 	int	13h
 
 ;=======	search loader.bin
+; 逻辑: 1. 从软盘根目录区的起始位置读取一个扇区到0000:8000内存处
+;       2. 一个扇区最多存储10h个目录项
+;       3. 检测第一个目录项的前11字节和LoaderFileName指定的字符串是否一致。一致则找到，ES:DI指向匹配的目录项(DI此时指向目录项中的"文件属性")；不一致继续查找下一个目录项。
+;       4. 此扇区的所有目录项都检查完后，还没有找到，则继续读取下一个扇区，从第1步开始执行。
+;       5. 根目录区最多有[RootDirSizeForLoop]（即RootDirSectors）个扇区，都读取完之后依旧没有找到，读取失败
+;=======
 	mov	word	[SectorNo],	SectorNumOfRootDirStart
 
 Lable_Search_In_Root_Dir_Begin:
@@ -102,11 +108,11 @@ Lable_Search_In_Root_Dir_Begin:
 	mov	bx,	8000h
 	mov	ax,	[SectorNo]
 	mov	cl,	1
-	call	Func_ReadOneSector
+	call	Func_ReadOneSector      ; read one sector from floppy disk's ROOT-Directory to 0000:8000 address
 	mov	si,	LoaderFileName
 	mov	di,	8000h
-	cld
-	mov	dx,	10h
+	cld                             ; clear direction flag, then the LODSB instruction will increase SI.
+	mov	dx,	10h             ; 每个扇区可容纳目录项数 512/32=16=10h
 	
 Label_Search_For_LoaderBin:
 
@@ -120,7 +126,7 @@ Label_Cmp_FileName:
 	cmp	cx,	0
 	jz	Label_FileName_Found
 	dec	cx
-	lodsb	
+	lodsb	                        ; load one Byte from ES:SI to AL, then increase SI (because Direction Flag has been cleared)
 	cmp	al,	byte	[es:di]
 	jz	Label_Go_On
 	jmp	Label_Different
@@ -132,8 +138,8 @@ Label_Go_On:
 
 Label_Different:
 
-	and	di,	0ffe0h
-	add	di,	20h
+	and	di,	0ffe0h          ; DI is 2Byte. ffe0h = 1111 1111 1110 0000b. 由于ROOT-Directory中一项为32Byte，DI在一次搜索中最多增长20h，所以使用ffe0h把DI重新设置为这个ROOT项的起始地址处。
+	add	di,	20h             ; 下一个ROOT项
 	mov	si,	LoaderFileName
 	jmp	Label_Search_For_LoaderBin
 
@@ -201,7 +207,12 @@ Label_File_Loaded:
 	
 	jmp	$
 
-;=======	read one sector from floppy
+;===================================
+; FUNC - Read Some Sectors from floppy disk to memory
+; AX: starting sector to read
+; CL: number of sectors
+; ES:BX target memory to store
+;===================================
 
 Func_ReadOneSector:
 	
@@ -274,7 +285,7 @@ Label_Even_2:
 
 ;=======	tmp variable
 
-RootDirSizeForLoop	dw	RootDirSectors
+RootDirSizeForLoop	dw	RootDirSectors  ; [RootDirSectors]? 原文中会不会两个指向同一个地址? 不用，因为equ相当于一个宏定义，和用dw定义的变量不一样。
 SectorNo		dw	0
 Odd			db	0
 
