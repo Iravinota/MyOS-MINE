@@ -83,11 +83,18 @@ total 4
 
 ## 8. FAT12文件系统
 
-参看[An overview of FAT12](http://www.disc.ua.es/~gil/FAT12Description.pdf)
+- 参看[An overview of FAT12](http://www.disc.ua.es/~gil/FAT12Description.pdf)
+- 参看[FAT12文件系统简介](https://blog.csdn.net/xhyzjiji/article/details/49027013)
+- 参看[FAT File Systems](http://www.ntfs.com/fat-systems.htm)
 
-参看[FAT12文件系统简介](https://blog.csdn.net/xhyzjiji/article/details/49027013)
+![cluster](img/2019-03-01-23-58-05.png)
 
-参看[FAT File Systems](http://www.ntfs.com/fat-systems.htm)
+``` math
+偏移字节编号 = 簇编号 * 3 / 2
+奇偶性 = 簇编号 * 3 % 2 (0=>簇编号为偶数，1=>簇编号为奇数)
+偏移字节编号 / BytesPerSector = 扇区偏移值
+偏移字节编号 % BytesPerSector = 扇区内字节的偏移值
+```
 
 ## 9. LBA<==>CHS转换
 

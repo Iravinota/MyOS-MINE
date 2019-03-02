@@ -171,7 +171,7 @@ Label_FileName_Found:
 	mov	ax,	RootDirSectors
 	and	di,	0ffe0h
 	add	di,	01ah
-	mov	cx,	word	[es:di]
+	mov	cx,	word	[es:di] ; 起始簇号
 	push	cx
 	add	cx,	ax
 	add	cx,	SectorBalance
@@ -240,7 +240,11 @@ Label_Go_On_Reading:
 	pop	bp
 	ret
 
-;=======	get FAT Entry
+;==============================
+; FUNC: get next FAT Entry
+;
+; AX: FAT entry index (input/output)
+;==============================
 
 Func_GetFATEntry:
 
@@ -252,9 +256,9 @@ Func_GetFATEntry:
 	pop	ax
 	mov	byte	[Odd],	0
 	mov	bx,	3
-	mul	bx
+	mul	bx                      ; DX:AX ← AX ∗ r/m16
 	mov	bx,	2
-	div	bx
+	div	bx                      ; DX:AX/bx, AX ← Quotient, DX ← Remainder
 	cmp	dx,	0
 	jz	Label_Even
 	mov	byte	[Odd],	1
