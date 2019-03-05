@@ -19,8 +19,12 @@
 8. BIOS在内存中创建IVT（Interrupt Vector Table），用于执行中断。当CPU芯片上有中断信号到达时，在CPU完成当前指令之后，就会根据IVT执行对应的中断处理程序。IVT被放置在物理内存的最开始位置，从0x0000到0x03ff，一共1024字节，共256项，每项占4个字节，指向IR(Interrupt Routine)所在的地址。
 9. BIOS做一些更多的硬件检测，看看硬件是否都正常。
 10. BIOS按照设置的设备启动顺序，依次检测这些设备是不是可启动设备。如果一个设备（磁盘、软盘、U盘、光盘等）的第一个sector的第511字节是0x55，第512字节是0xAA，那么这个设备就是一个可启动设备。
-11. BIOS把可启动设备的bootable sector加载到0x7c00地址处。CPU跳转到0x7c00处开始执行启动程序（也就是第3章编写的boot.asm编译之后的程序）。以上5步为BIOS的执行。
-12. *持续更新*
+11. BIOS把可启动设备的bootable sector加载到**0x7c00**地址处。CPU跳转到0x7c00处开始执行启动程序（也就是第3章编写的boot.asm编译之后的程序）。以上5步为BIOS的执行。
+12. *开始执行boot.asm程序*
+13. 参看 10. boot.asm启动过程总结
+14. *boot.asm程序执行结束*，CPU跳转至0x1000:0000物理地址处继续执行loader.bin
+15. *持续更新*
+
 
 ## 2. 通用寄存器
 
@@ -64,6 +68,21 @@ total 4
 1+0 records out
 512 bytes (512 B) copied, 0.000302191 s, 1.7 MB/s
 ```
+
+boot.bin写入boot.img虚拟软盘镜像文件后，boot.img已经拥有了FAT12文件系统。加载loader.bin的方法：
+
+``` bash
+$ cd /media/
+$ sudo mkdir floppya
+$ sudo chmod 777 floppya/
+$ cd ~/Software/bochs-2.6.8/
+$ id eric
+uid=1000(eric) gid=1000(eric) groups=1000(eric),10(wheel)
+$ sudo mount boot.img /media/floppya/ -t vfat -o loop,umask=0022,gid=1000,uid=1000      # 加载后的设备以eric用户加载，之后才能用cp复制loader.bin进去
+$ cp loader.bin /media/floppya/         # 之后，在bochs目录执行bochs命令，启动模拟器
+```
+
+使用命令`umount /media/floppya/`卸载软盘
 
 ## 6. Bochs设置
 
@@ -127,3 +146,19 @@ C = LBA/SPT/HPC
 C = (LBA/SPT) >> 1
 H = (LBA/SPT) & 1
 ```
+
+## 10. boot.asm启动过程总结
+
+- 由boot.asm编译成的boot.bin是按照FAT12的格式编写的，使用dd命令把它写入到boot.img虚拟软盘后，这个软盘就是一个可启动设备。bochs中又设置了把boot.img虚拟软盘作为加载设备，所以bochs启动时会由BIOS检查这个虚拟软盘，并把这个软盘的第一个sector拷贝到0x7c00物理地址处。
+- CPU跳转到0x7c00物理地址处执行。也就是boot.asm的第一条指令 *jmp short Label_Start*
+- boot.asm的主要功能是在屏幕输出几个字符串，并且从FAT12格式化的虚拟软盘中把loader.bin文件加载到**0x1000:0x0000**（即0x10000）物理地址处。
+- 其搜素过程为：
+  - 从软盘根目录区的起始位置读取一个扇区到**0000:8000**内存处
+  - 一个扇区最多存储10h个目录项
+  - 检测第一个目录项的前11字节和LoaderFileName指定的字符串是否一致。一致则找到，ES:DI指向匹配的目录项(DI此时指向目录项中的"文件属性")；不一致继续查找下一个目录项。
+  - 此扇区的所有目录项都检查完后，还没有找到，则继续读取下一个扇区，从第1步开始执行。
+  - 根目录区最多有[RootDirSizeForLoop]（即RootDirSectors）个扇区，都读取完之后依旧没有找到，读取失败
+- 其加载过程为：
+  - 根据读取到的根目录项，从中可以找到第一个FAT项。把这个FAT项对应的簇（即sector）加载到BaseOfLoader:OffsetOfLoader（即**0x1000:0x0000**）处
+  - 然后根据FAT项依次查找下一个FAT项。查找过程中加载FAT所在扇区时，也加载到**0000:8000**物理地址处。
+  - 依次加载到指定位置，直至FAT项为0xfff，表示文件结束
