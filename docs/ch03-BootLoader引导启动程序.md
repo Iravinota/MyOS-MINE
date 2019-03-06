@@ -89,7 +89,7 @@ $ cp loader.bin /media/floppya/         # 之后，在bochs目录执行bochs命�
 - 注释掉 sound, ata0-master
 - 启动bochs时可以直接执行`bochs`命令，默认加载.bochsrc配置文件。书中启动的命令不对。
 
-## 7. 书中代码解释
+## 7. 书中代码解释 - NASM和汇编指令要点
 
 - `jmp $` 表示无限循环
 - `mov byte[bp-2], cl` bp指向data stack，[]表示寻址，[bp-2]就是stack中向下的2个字节处的地址。这条指令把cl的值放到指定的stack位置中
@@ -98,6 +98,7 @@ $ cp loader.bin /media/floppya/         # 之后，在bochs目录执行bochs命�
 - Label相当于地址，一般以`jmp Label`方式使用
 - `SectorNo dw 0` 定义变量，一般会以`[SectorNo]`方式使用
 - `RootDirSizeForLoop dw RootDirSectors` 中，`RootDirSectors`是宏定义，所以此语句意义为`RootDirSizeForLoop dw 14`
+- `out` 写入IO端口。目的操作数为立即数时，只能是8位宽；如果是DX寄存器，则可以是16位宽
 - *持续更新*
 
 ## 8. FAT12文件系统
@@ -162,3 +163,23 @@ H = (LBA/SPT) & 1
   - 根据读取到的根目录项，从中可以找到第一个FAT项。把这个FAT项对应的簇（即sector）加载到BaseOfLoader:OffsetOfLoader（即**0x1000:0x0000**）处
   - 然后根据FAT项依次查找下一个FAT项。查找过程中加载FAT所在扇区时，也加载到**0000:8000**物理地址处。
   - 依次加载到指定位置，直至FAT项为0xfff，表示文件结束
+
+## 11. loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程
+
+- *参考代码/code/ch03/4/loader.asm*
+- 通过设置92h端口，开启A20
+- 通过设置GDT、cr0的第0位，短暂进入保护模式，设置FS寄存器，使其可以寻址4G地址空间，CPU进入了所谓的Big Real Mode模式。其实还是在实模式。
+- 从软盘中搜索并加载kernel.bin。搜索方式和boot.asm中一样。其加载过程为：
+  - 对于每一个待读取的sector，首先读取到内存 BaseTmpOfKernelAddr:OffsetTmpOfKernelFile（即**0000:7E00**，即boot.bin之后，参看第4节）处
+  - 对于这个sector，按字节把其复制到 BaseOfKernelFile:OffsetOfKernelFile（即**0000:100000**，即1M）处。此处使用了FS段寄存器的超能力，它可以寻址到4G.
+  - 然后再读取下一个sector，直至FAT中为0xfff，表示文件结束。
+- 直接向地址空间**B800:0000**处写一个G。会显示在屏幕上
+- 关闭软盘驱动器
+- *此时，在这段代码之后加一个jmp $，然后随便放一个kernel.bin到虚拟软盘上，就可以看到文件被加载。注意cp后需要使用sync同步，否则bochs有可能还看不到*
+
+![load kernel.bin success](img/2019-03-06-22-44-17.png)
+
+- 使用[int 15h/AX=E820h](http://www.ctyme.com/intr/rb-1741.htm)中断获取物理内存信息，存放到 0000:MemoryStructBufferAddr（即**0000:7E00**）处（这个地址是刚才kernel.bin的临时转存地址），供kernel.bin后续使用。
+- 使用[int 10h/AX=4F00h](http://www.ctyme.com/intr/rb-0273.htm)获取VBE信息（loader.asm#332行），存储在**0000:8000**处
+- 对于获取到到VBE信息，其0E偏移量处为一个指向*显示模式*列表的指针。对于每一个显示模式，使用[int 10h/AX=4F01h](http://www.ctyme.com/intr/rb-0274.htm)获取显示模式信息，连续存储在**0000:8200**为起始的位置，每个显示模式的信息为256 bytes。这个显示模式的列表以FFFFh结尾。
+- 使用[int 10h/AX=4F02h](http://www.ctyme.com/intr/rb-0275.htm)设置SVGA Video Mode. 这样就能按指定模式调整bochs窗口大小了。
