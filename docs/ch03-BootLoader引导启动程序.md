@@ -183,3 +183,18 @@ H = (LBA/SPT) & 1
 - 使用[int 10h/AX=4F00h](http://www.ctyme.com/intr/rb-0273.htm)获取VBE信息（loader.asm#332行），存储在**0000:8000**处
 - 对于获取到到VBE信息，其0E偏移量处为一个指向*显示模式*列表的指针。对于每一个显示模式，使用[int 10h/AX=4F01h](http://www.ctyme.com/intr/rb-0274.htm)获取显示模式信息，连续存储在**0000:8200**为起始的位置，每个显示模式的信息为256 bytes。这个显示模式的列表以FFFFh结尾。
 - 使用[int 10h/AX=4F02h](http://www.ctyme.com/intr/rb-0275.htm)设置SVGA Video Mode. 这样就能按指定模式调整bochs窗口大小了。
+- 使CPU从实模式进入保护模式 (代码中：init IDT GDT goto protect mode)
+  - 执行`cli`禁止可屏蔽中断
+  - 执行`lgdt`加载Globle Descriptor Table
+  - 置`cr0`寄存器第0位为1，进入保护模式。在此语句之后设置断点，段寄存器状态为：
+
+  ![cs not changed](img/2019-03-07-21-09-23.png)
+
+  - 使用一个`jmp dword SelectorCode32:GO_TO_TMP_Protect`指令，设置`CS`寄存器为`GDT`中的代码段。在此语句之后设置断点，段寄存器状态为：
+
+  ![cs changed](img/2019-03-07-21-11-20.png)
+  - 设置`ds, es, fs, ss`为`GDT`中的数据段。在此语句之后设置断点，段寄存器状态为：
+
+  ![segment changed](img/2019-03-07-21-11-58.png)
+  
+- ff

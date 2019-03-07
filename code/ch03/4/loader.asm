@@ -28,9 +28,9 @@ MemoryStructBufferAddr	equ	0x7E00
 
 [SECTION gdt]
 
-LABEL_GDT:		dd	0,0
-LABEL_DESC_CODE32:	dd	0x0000FFFF,0x00CF9A00
-LABEL_DESC_DATA32:	dd	0x0000FFFF,0x00CF9200
+LABEL_GDT:		dd	0,0                             ; NULL, offset 0x00
+LABEL_DESC_CODE32:	dd	0x0000FFFF,0x00CF9A00           ; CODE, offset 0x08
+LABEL_DESC_DATA32:	dd	0x0000FFFF,0x00CF9200           ; DATA, offset 0x10
 
 GdtLen	equ	$ - LABEL_GDT
 GdtPtr	dw	GdtLen - 1
@@ -479,9 +479,6 @@ Label_SVGA_Mode_Info_Finish:
 	cmp	ax,	004Fh
 	jnz	Label_SET_SVGA_Mode_VESA_VBE_FAIL
 
-        ; ----------------- TEST: ---------------
-        jmp $
-
 ;=======	init IDT GDT goto protect mode 
 
 	cli			;======close interrupt
@@ -505,7 +502,7 @@ GO_TO_TMP_Protect:
 
 ;=======	go to tmp long mode
 
-	mov	ax,	0x10
+	mov	ax,	0x10                    ; 0x10是GDT中DATA段的偏移量，参看[SECTION gdt]
 	mov	ds,	ax
 	mov	es,	ax
 	mov	fs,	ax
