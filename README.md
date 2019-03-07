@@ -2,6 +2,11 @@
 
 《一个64位操作系统的设计与实现》的实现和说明
 
+## 章节笔记
+
+- [ch02-环境搭建](docs/ch02-环境搭建.md)
+- [ch03-BootLoader引导启动程序](docs/ch03-BootLoader引导启动程序.md)
+
 ## 参考文档
 
 - [Interrupt Jump Table](http://www.ctyme.com/intr/int.htm)
