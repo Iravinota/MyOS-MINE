@@ -21,9 +21,9 @@
 10. BIOS按照设置的设备启动顺序，依次检测这些设备是不是可启动设备。如果一个设备（磁盘、软盘、U盘、光盘等）的第一个sector的第511字节是0x55，第512字节是0xAA，那么这个设备就是一个可启动设备。
 11. BIOS把可启动设备的bootable sector加载到**0x7c00**地址处。CPU跳转到0x7c00处开始执行启动程序（也就是第3章编写的boot.asm编译之后的程序）。以上5步为BIOS的执行。
 12. *开始执行boot.asm程序*
-13. 参看[第10节 boot.asm启动过程总结](## 10. boot.asm启动过程总结)
+13. 参看[第10节 boot.asm启动过程总结](#10-boot.asm启动过程总结)
 14. *boot.asm程序执行结束*，CPU跳转至0x1000:0000物理地址处继续执行loader.bin
-15. loader.bin执行过程参看[第11节 loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程](## 11. loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程)
+15. loader.bin执行过程参看[第11节 loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程](#11-loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程)
 
 ## 2. 通用寄存器
 
