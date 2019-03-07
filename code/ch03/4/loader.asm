@@ -568,8 +568,8 @@ GO_TO_TMP_Protect:
 ;=======	open PE and paging
 
 	mov	eax,	cr0
-	bts	eax,	0
-	bts	eax,	31
+	bts	eax,	0                       ; PE位 - Protected Mode Enable
+	bts	eax,	31                      ; PG位 - Paging
 	mov	cr0,	eax
 
 	jmp	SelectorCode64:OffsetOfKernelFile

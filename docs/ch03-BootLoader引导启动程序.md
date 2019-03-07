@@ -21,10 +21,9 @@
 10. BIOS按照设置的设备启动顺序，依次检测这些设备是不是可启动设备。如果一个设备（磁盘、软盘、U盘、光盘等）的第一个sector的第511字节是0x55，第512字节是0xAA，那么这个设备就是一个可启动设备。
 11. BIOS把可启动设备的bootable sector加载到**0x7c00**地址处。CPU跳转到0x7c00处开始执行启动程序（也就是第3章编写的boot.asm编译之后的程序）。以上5步为BIOS的执行。
 12. *开始执行boot.asm程序*
-13. 参看 10. boot.asm启动过程总结
+13. 参看[第10节 boot.asm启动过程总结](## 10. boot.asm启动过程总结)
 14. *boot.asm程序执行结束*，CPU跳转至0x1000:0000物理地址处继续执行loader.bin
-15. *持续更新*
-
+15. loader.bin执行过程参看[第11节 loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程](## 11. loader.asm从实模式进入保护模式以及IA-32e模式并加载kernel.bin过程)
 
 ## 2. 通用寄存器
 
@@ -41,6 +40,8 @@
 - Used in Protected Mode:
 
 ![Segment Register](img/2019-02-26-23-49-58.png)
+
+更详细的寄存器信息请参考[CPU Registers x86-64](https://wiki.osdev.org/CPU_Registers_x86-64)
 
 ## 4. 内存使用情况
 
@@ -185,16 +186,18 @@ H = (LBA/SPT) & 1
 - 使用[int 10h/AX=4F02h](http://www.ctyme.com/intr/rb-0275.htm)设置SVGA Video Mode. 这样就能按指定模式调整bochs窗口大小了。
 - 使CPU从实模式进入保护模式 (代码中：init IDT GDT goto protect mode)
   - 执行`cli`禁止可屏蔽中断
-  - 执行`lgdt`加载Globle Descriptor Table
-  - 置`cr0`寄存器第0位为1，进入保护模式。在此语句之后设置断点，段寄存器状态为：
-
-  ![cs not changed](img/2019-03-07-21-09-23.png)
-
-  - 使用一个`jmp dword SelectorCode32:GO_TO_TMP_Protect`指令，设置`CS`寄存器为`GDT`中的代码段。在此语句之后设置断点，段寄存器状态为：
-
-  ![cs changed](img/2019-03-07-21-11-20.png)
-  - 设置`ds, es, fs, ss`为`GDT`中的数据段。在此语句之后设置断点，段寄存器状态为：
-
-  ![segment changed](img/2019-03-07-21-11-58.png)
-  
-- ff
+  - 执行`lgdt`加载Globle Descriptor Table。**遗留问题：GDT有什么用？和页表有什么区别？TSS是什么？**
+  - 置`cr0`寄存器第0位为1，进入保护模式
+  - 立即执行一个`jmp dword SelectorCode32:GO_TO_TMP_Protect`指令，设置`CS`寄存器为`GDT`中的代码段
+- 进入保护模式后，设置`ds, es, fs, ss`为`GDT`中的数据段
+- 从保护模式进入IA-32e模式
+  - 检测CPU是否支持IA-32e模式
+  - 在**0x90000**处设置页目录
+  - 加载64位GDT，并设置除CS外的所有段寄存器
+  - 由于进入保护模式时没有打开分页，所以此时`cr0.PG`=0
+  - 设置`cr4.PAE`=1
+  - 向`cr3`传入页目录基址，即**0x90000**
+  - 通过`rdmsr`和`wrmsr`指令，设置`IA32_EFER.LME`=1 (Long Mode Enable)
+  - 设置`cr0.PG`=1，打开分页，CPU会自动设置`IA32_EFER.LMA`=1 (Long Mode Active)
+  - 为保险起见，同时设置`cr0.PE`=1，依旧在保护模式。这种状态叫兼容模式，在IA-32e模式（64位模式）下运行32位程序
+  - 执行`jmp SelectorCode64:OffsetOfKernelFile`，随即进入64位IA-32e模式，跳转到**0x100000**(1M)地址处，开始执行**kernel.bin**.
