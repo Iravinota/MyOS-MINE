@@ -14,4 +14,6 @@
 - [x86 Instruction Set Reference](https://c9x.me/x86/)
 - [x86 and amd64 instruction referencex86 and amd64 instruction reference](https://www.felixcloutier.com/x86/)
 - [CPU Registers x86-64](https://wiki.osdev.org/CPU_Registers_x86-64)
+- [Using as](http://sourceware.org/binutils/docs/as/)
 - [一个64位操作系统的设计与实现](http://www.ituring.com.cn/book/2450) 中的勘误
+- [《一个64位操作系统的设计与实现》读书笔记&随书源码](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-operating-system)

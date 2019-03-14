@@ -572,7 +572,7 @@ GO_TO_TMP_Protect:
 	bts	eax,	31                      ; PG位 - Paging
 	mov	cr0,	eax
 
-	jmp	SelectorCode64:OffsetOfKernelFile
+	jmp	SelectorCode64:OffsetOfKernelFile       ; ++++++++++++++++++++++++++++++++++++++JMP TO KERNEL+++++++++++++++++++++++++++++++++++++++++++++++++
 
 ;=======	test support long mode or not
 
