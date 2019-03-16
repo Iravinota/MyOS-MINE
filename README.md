@@ -6,6 +6,8 @@
 
 - [ch02-环境搭建](docs/ch02-环境搭建.md)
 - [ch03-BootLoader引导启动程序](docs/ch03-BootLoader引导启动程序.md)
+- [ch04-内核层](docs/ch04-内核层.md)
+- [ch06-处理器体系结构](docs/ch06-处理器体系结构.md)
 
 ## 参考文档
 
