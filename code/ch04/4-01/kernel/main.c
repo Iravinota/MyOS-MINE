@@ -13,7 +13,7 @@
 *
 ***************************************************/
 
-#include "font.h"
+#include "lib.h"
 #include "printk.h"
 
 void Start_Kernel(void)
@@ -25,6 +25,18 @@ void Start_Kernel(void)
         unsigned char *fontp = font_ascii['A'];
         unsigned char bittest = 0x80;
         unsigned char font_value;
+
+        Pos.XResolution = 1440;
+        Pos.YResolution = 900;
+
+        Pos.XPosition = 0;
+        Pos.YPosition = 0;
+
+        Pos.XCharSize = 8;
+        Pos.YCharSize = 16;
+
+        Pos.FB_addr = (int *)0xffff800000a00000;
+        Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4);
 
         for (i = 0; i < 1440 * 20; i++)
         {
@@ -84,6 +96,7 @@ void Start_Kernel(void)
 
         putchar((unsigned int *)0xffff800000a00000, 1440, 8, 80, 0x00ff0000, 0x0000ff00, 'B');
         
+        color_printk(YELLOW, BLACK, "Hello\t\t World!\n");
 
         while (1)
                 ;
