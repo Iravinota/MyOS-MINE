@@ -106,8 +106,8 @@ setup_TSS64:
 	shrq	$32,	%rdx
 	movq	%rdx,	72(%rdi)
 
-	mov	$0x40,	%ax                             /* TSS Descriptor位于GDT中的0x40位置（#8和#9，参看GDT_Table初始化过程） */
-	ltr	%ax
+//	mov	$0x40,	%ax                             /* TSS Descriptor位于GDT中的0x40位置（#8和#9，参看GDT_Table初始化过程） */
+//	ltr	%ax
 
 	movq	go_to_kernel(%rip),	%rax		/* movq address */
 	pushq	$0x08
@@ -115,7 +115,7 @@ setup_TSS64:
 	lretq
 
 go_to_kernel:
-	.quad	Start_Kernel
+	.quad	Start_Kernel            /************************************** GO TO THE MAIN.C FUNCTION*************************************************/
 
 
 //=======	ignore_int
