@@ -1,2 +1,6 @@
 .vscode
 /说明.md - 快捷方式.lnk
+*.o
+*.tmp
+*.bin
+system
