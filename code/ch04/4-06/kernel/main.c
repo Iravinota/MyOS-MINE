@@ -34,7 +34,7 @@ void Start_Kernel(void)
 	int *addr = (int *)0xffff800000a00000;
 	int i;
 
-//	struct Page * page = NULL;
+	struct Page * page = NULL;
 
 	Pos.XResolution = 1440;
 	Pos.YResolution = 900;
@@ -61,7 +61,7 @@ void Start_Kernel(void)
 
 	color_printk(RED,BLACK,"memory init \n");
 	init_memory();
-/*
+
 	color_printk(RED,BLACK,"memory_management_struct.bits_map:%#018lx\n",*memory_management_struct.bits_map);
 	color_printk(RED,BLACK,"memory_management_struct.bits_map:%#018lx\n",*(memory_management_struct.bits_map + 1));
 
@@ -76,7 +76,7 @@ void Start_Kernel(void)
 
 	color_printk(RED,BLACK,"memory_management_struct.bits_map:%#018lx\n",*memory_management_struct.bits_map);
 	color_printk(RED,BLACK,"memory_management_struct.bits_map:%#018lx\n",*(memory_management_struct.bits_map + 1));
-*/
+
 	while(1)
 		;
 }
