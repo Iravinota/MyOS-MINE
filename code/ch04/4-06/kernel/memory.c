@@ -200,7 +200,7 @@ void init_memory()
 			p->reference_count = 0;
 
 			p->age = 0;
-
+                        /*把对应bits_map中的位置0，表示其可用*/
 			*(memory_management_struct.bits_map + ((p->PHY_address >> PAGE_2M_SHIFT) >> 6)) ^= 1UL << (p->PHY_address >> PAGE_2M_SHIFT) % 64;
 
 		}
@@ -208,8 +208,9 @@ void init_memory()
 	}
 
 	/////////////init address 0 to page struct 0; because the memory_management_struct.e820[0].type != 1
+	// 因为e820[0]是一个小于2M的物理区域，所以上面的代码不会初始化page_struct[0]。这里手动初始化一下，但是zone_struct的指向不是实际的zone。这是在知晓了内存结构之后的手动修正
 	
-	memory_management_struct.pages_struct->zone_struct = memory_management_struct.zones_struct;
+        memory_management_struct.pages_struct->zone_struct = memory_management_struct.zones_struct;
 
 	memory_management_struct.pages_struct->PHY_address = 0UL;
 	memory_management_struct.pages_struct->attribute = 0;
@@ -253,9 +254,9 @@ void init_memory()
 
 	Global_CR3 = Get_gdt();
 
-	color_printk(INDIGO,BLACK,"Global_CR3\t:%#018lx\n",Global_CR3);
-	color_printk(INDIGO,BLACK,"*Global_CR3\t:%#018lx\n",*Phy_To_Virt(Global_CR3) & (~0xff));
-	color_printk(PURPLE,BLACK,"**Global_CR3\t:%#018lx\n",*Phy_To_Virt(*Phy_To_Virt(Global_CR3) & (~0xff)) & (~0xff));
+	color_printk(INDIGO,BLACK,"Global_CR3\t:%#018lx\n",Global_CR3);                                                         /*__PML4E所在地址*/
+	color_printk(INDIGO,BLACK,"*Global_CR3\t:%#018lx\n",*Phy_To_Virt(Global_CR3) & (~0xff));                                /*__PDPTE所在地址*/
+	color_printk(PURPLE,BLACK,"**Global_CR3\t:%#018lx\n",*Phy_To_Virt(*Phy_To_Virt(Global_CR3) & (~0xff)) & (~0xff));       /*__PDE所在地址*/
 
 
 	for(i = 0;i < 10;i++)

@@ -20,7 +20,7 @@
 #include "memory.h"
 
 /*
-Kernel.lds中设置的链接之后生成的system中各个段的起止标签，包括.text段（_text, _etext） .data段（_data, _edata） .bss段（_bss, _ebss） _end标记核心程序段结尾
+Kernel.lds中设置的链接之后生成的system中各个段的起止标签，包括.text段（_text, _etext） .data段（_data, _edata） .bss段（_bss, _ebss） _end标记核心程序段结尾（线性地址）
 */
 extern char _text;
 extern char _etext;

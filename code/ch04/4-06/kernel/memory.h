@@ -142,21 +142,21 @@ struct Global_Memory_Descriptor
 	struct E820 	e820[32];
 	unsigned long 	e820_length;
 
-	unsigned long * bits_map;
+	unsigned long * bits_map;       /*bits_map结构所在地址，程序中会赋值为_end之后的4K对齐位置，即系统内核所在位置之后（线性地址？）*/
 	unsigned long 	bits_size;
 	unsigned long   bits_length;
 
-	struct Page *	pages_struct;
+	struct Page *	pages_struct;   /*struct Page所在地址，在bits_map之后，4K对齐（线性地址？）*/
 	unsigned long	pages_size;
 	unsigned long 	pages_length;
 
-	struct Zone * 	zones_struct;
+	struct Zone * 	zones_struct;   /*struct Zone所在地址，在struct Page之后，4K对齐（线性地址？）*/
 	unsigned long	zones_size;
 	unsigned long 	zones_length;
 
 	unsigned long 	start_code , end_code , end_data , end_brk;
 
-	unsigned long	end_of_struct;	
+	unsigned long	end_of_struct;	/*bits_map, pages_struct, zones_struct在的结束地址（线性地址？）*/
 };
 
 ////alloc_pages zone_select
@@ -223,17 +223,16 @@ int ZONE_UNMAPED_INDEX	= 0;	//above 1GB RAM,unmapped in pagetable
 #define MAX_NR_ZONES	10	//max zone
 
 /*
-
+一个连续的可用物理地址（2M可用），一个zone中可能有很多个Page
 */
-
 struct Zone
 {
-	struct Page * 	pages_group;
-	unsigned long	pages_length;
+	struct Page * 	pages_group;            /*指向GMD_struct.pages_struct中此zone的那一项*/
+	unsigned long	pages_length;           /*此zone中2M内存页的个数*/
 	
-	unsigned long	zone_start_address;
-	unsigned long	zone_end_address;
-	unsigned long	zone_length;
+	unsigned long	zone_start_address;     /*2M对齐的起始地址*/
+	unsigned long	zone_end_address;       /*2M对齐的结束地址*/
+	unsigned long	zone_length;            /*长度Bytes: zone_end_address - zone_start_address*/
 	unsigned long	attribute;
 
 	struct Global_Memory_Descriptor * GMD_struct;
