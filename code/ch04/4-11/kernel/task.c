@@ -128,7 +128,11 @@ int kernel_thread(unsigned long (* fn)(unsigned long), unsigned long arg, unsign
 }
 
 
-
+/*
+task.h中的switch_to()中会执行此函数，传递过来参数RDI(=prev)和RSI(=next)，prev和next都是struct task_struct *类型
+task.h中的switch_to()会在跳转到此函数之前，执行pushq指令把next->thread->rip入栈
+__switch_to函数执行完毕，执行ret指令时，会跳转到next->thread->rip地址处，开始执行next进程
+*/
 inline void __switch_to(struct task_struct *prev,struct task_struct *next)
 {
 
