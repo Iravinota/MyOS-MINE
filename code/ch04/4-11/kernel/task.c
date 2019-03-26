@@ -55,7 +55,7 @@ unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned
 	thd = (struct thread_struct *)(tsk + 1);
 	tsk->thread = thd;	
 
-	memcpy(regs,(void *)((unsigned long)tsk + STACK_SIZE - sizeof(struct pt_regs)),sizeof(struct pt_regs));
+	memcpy(regs,(void *)((unsigned long)tsk + STACK_SIZE - sizeof(struct pt_regs)),sizeof(struct pt_regs));         // 这里tsk是unsigned long类型，不是指针了
 
 	thd->rsp0 = (unsigned long)tsk + STACK_SIZE;
 	thd->rip = regs->rip;

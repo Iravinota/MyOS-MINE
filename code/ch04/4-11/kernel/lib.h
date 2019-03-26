@@ -52,7 +52,7 @@ inline void list_add_to_behind(struct List * entry,struct List * new)	////add to
 	entry->next = new;
 }
 
-inline void list_add_to_before(struct List * entry,struct List * new)	////add to entry behind
+inline void list_add_to_before(struct List * entry,struct List * new)	////add to entry before
 {
 	new->next = entry;
 	entry->prev->next = new;
