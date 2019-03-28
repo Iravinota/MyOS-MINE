@@ -20,9 +20,45 @@
 #include "memory.h"
 #include "linkage.h"
 
+
+extern void ret_system_call(void);
+
+void user_level_function()
+{
+	color_printk(RED,BLACK,"user_level_function task is running\n");
+	while(1);
+}
+
+
+unsigned long do_execve(struct pt_regs * regs)
+{
+	regs->rdx = 0x800000;	//RIP
+	regs->rcx = 0xa00000;	//RSP
+	regs->rax = 1;	
+	regs->ds = 0;
+	regs->es = 0;
+	color_printk(RED,BLACK,"do_execve task is running\n");
+
+	memcpy(user_level_function,(void *)0x800000,1024);
+
+	return 0;
+}
+
+
 unsigned long init(unsigned long arg)
 {
+	struct pt_regs *regs;
+
 	color_printk(RED,BLACK,"init task is running,arg:%#018lx\n",arg);
+
+	current->thread->rip = (unsigned long)ret_system_call;
+	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
+	regs = (struct pt_regs *)current->thread->rsp;
+
+	__asm__	__volatile__	(	"movq	%1,	%%rsp	\n\t"
+					"pushq	%2		\n\t"
+					"jmp	do_execve	\n\t"
+					::"D"(regs),"m"(current->thread->rsp),"m"(current->thread->rip):"memory");
 
 	return 1;
 }
@@ -173,6 +209,7 @@ void task_init()
 	init_mm.end_brk = memory_management_struct.end_brk;
 
 	init_mm.start_stack = _stack_start;
+	
 	wrmsr(0x174,KERNEL_CS);
 
 //	init_thread,init_tss

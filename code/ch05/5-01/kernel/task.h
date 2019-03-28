@@ -47,8 +47,6 @@ extern char _end;
 
 extern unsigned long _stack_start;
 
-extern void ret_from_intr();
-
 /*
 
 */
