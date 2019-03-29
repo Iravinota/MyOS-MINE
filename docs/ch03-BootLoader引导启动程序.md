@@ -60,11 +60,10 @@
 `bximage`执行之后，会在**当前目录**创建一个boot.img文件，Bochs会使用这个文件作为floppya。所以，我们要在Bochs目录（~/Software/bochs-2.6.8）中执行此命令。在Bochs目录下，.bochsrc中，需要有`floppya: image="boot.img", status=inserted`设置。
 
 ``` bash
-[eric@study /media/sf_LinuxShareFolder/MyOS_MINE/code]$ l
-total 4
+$ l
 -rwxrwxrwx. 1 root root 907 Feb 27 00:06 boot.asm
-[eric@study /media/sf_LinuxShareFolder/MyOS_MINE/code]$ nasm boot.asm -o boot.bin
-[eric@study /media/sf_LinuxShareFolder/MyOS_MINE/code]$ dd if=boot.bin of=/home/eric/Software/bochs-2.6.8/boot.img bs=512 count=1 conv=notrunc
+$ nasm boot.asm -o boot.bin
+$ dd if=boot.bin of=/home/eric/Software/bochs-2.6.8/boot.img bs=512 count=1 conv=notrunc
 1+0 records in
 1+0 records out
 512 bytes (512 B) copied, 0.000302191 s, 1.7 MB/s
