@@ -28,15 +28,17 @@ extern void system_call(void);
 void user_level_function()
 {
 	long ret = 0;
-	color_printk(RED,BLACK,"user_level_function task is running\n");
+//	color_printk(RED,BLACK,"user_level_function task is running\n");
+	char string[]="Hello World!\n";
 
 	__asm__	__volatile__	(	"leaq	sysexit_return_address(%%rip),	%%rdx	\n\t"
 					"movq	%%rsp,	%%rcx		\n\t"
 					"sysenter			\n\t"
 					"sysexit_return_address:	\n\t"
-					:"=a"(ret):"0"(15):"memory");	
+					:"=a"(ret):"0"(1),"D"(string):"memory");	
+	//              :"=a"(ret):"0"(15):"memory");
 
-	color_printk(RED,BLACK,"user_level_function task called sysenter,ret:%ld\n",ret);
+//	color_printk(RED,BLACK,"user_level_function task called sysenter,ret:%ld\n",ret);
 
 	while(1);
 }
