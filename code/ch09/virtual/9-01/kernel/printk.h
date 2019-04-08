@@ -63,6 +63,11 @@ struct position
 	unsigned long FB_length;
 }Pos;
 
+/*
+
+*/
+
+void frame_buffer_init();
 
 /*
 

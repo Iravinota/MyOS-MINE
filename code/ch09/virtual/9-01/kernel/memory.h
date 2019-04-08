@@ -400,4 +400,10 @@ unsigned long slab_free(struct Slab_cache * slab_cache,void * address,unsigned l
 
 unsigned long slab_init();
 
+/*
+
+*/
+
+void pagetable_init();
+
 #endif

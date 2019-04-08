@@ -54,7 +54,7 @@ unsigned long do_execve(struct pt_regs * regs)
 
 	memcpy(user_level_function,(void *)0x800000,1024);
 
-	return 0;
+	return 1;
 }
 
 
@@ -86,7 +86,7 @@ unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned
 	
 	color_printk(WHITE,BLACK,"alloc_pages,bitmap:%#018lx\n",*memory_management_struct.bits_map);
 
-	p = alloc_pages(ZONE_NORMAL,1,PG_PTable_Maped | PG_Active | PG_Kernel);
+	p = alloc_pages(ZONE_NORMAL,1,PG_PTable_Maped | PG_Kernel);
 
 	color_printk(WHITE,BLACK,"alloc_pages,bitmap:%#018lx\n",*memory_management_struct.bits_map);
 
@@ -102,7 +102,7 @@ unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned
 	tsk->state = TASK_UNINTERRUPTIBLE;
 
 	thd = (struct thread_struct *)(tsk + 1);
-	tsk->thread = thd;	
+	tsk->thread = thd;
 
 	memcpy(regs,(void *)((unsigned long)tsk + STACK_SIZE - sizeof(struct pt_regs)),sizeof(struct pt_regs));
 
@@ -117,7 +117,7 @@ unsigned long do_fork(struct pt_regs * regs, unsigned long clone_flags, unsigned
 
 	tsk->state = TASK_RUNNING;
 
-	return 0;
+	return 1;
 }
 
 

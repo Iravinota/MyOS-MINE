@@ -80,7 +80,8 @@ void init_memory()
 
 	for(i = 0;i < 32;i++)
 	{
-//		color_printk(ORANGE,BLACK,"Address:%#018lx\tLength:%#018lx\tType:%#010x\n",p->address,p->length,p->type);
+		if(p->type == 1)
+		color_printk(ORANGE,BLACK,"Address:%#018lx\tLength:%#018lx\tType:%#010x\n",p->address,p->length,p->type);
 		unsigned long tmp = 0;
 		if(p->type == 1)
 			TotalMem +=  p->length;
@@ -256,8 +257,8 @@ void init_memory()
 
 	color_printk(ORANGE,BLACK,"1.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
 
-//	for(i = 0;i < 10;i++)
-//		*(Phy_To_Virt(Global_CR3)  + i) = 0UL;
+	for(i = 0;i < 10;i++)
+		*(Phy_To_Virt(Global_CR3)  + i) = 0UL;
 	
 	flush_tlb();
 }
@@ -795,8 +796,8 @@ void * slab_malloc(struct Slab_cache * slab_cache,unsigned long arg)
 	
 		page_init(tmp_slab->page,PG_Kernel);
 
-		tmp_slab->using_count = PAGE_2M_SIZE/slab_cache->size;
-		tmp_slab->free_count = tmp_slab->using_count;
+		tmp_slab->using_count = 0;              // 书上错误，修改
+		tmp_slab->free_count = PAGE_2M_SIZE/slab_cache->size;   // 书上错误，修改
 		tmp_slab->Vaddress = Phy_To_Virt(tmp_slab->page->PHY_address);
 
 		tmp_slab->color_count = tmp_slab->free_count;
@@ -1026,4 +1027,66 @@ unsigned long slab_init()
 	color_printk(ORANGE,BLACK,"start_code:%#018lx,end_code:%#018lx,end_data:%#018lx,end_brk:%#018lx,end_of_struct:%#018lx\n",memory_management_struct.start_code,memory_management_struct.end_code,memory_management_struct.end_data,memory_management_struct.end_brk, memory_management_struct.end_of_struct);
 
 	return 1;
+}
+
+/*
+
+*/
+
+void pagetable_init()
+{
+	unsigned long i,j;
+	unsigned long * tmp = NULL;
+
+	Global_CR3 = Get_gdt();
+
+	tmp = (unsigned long *)(((unsigned long)Phy_To_Virt((unsigned long)Global_CR3 & (~ 0xfffUL))) + 8 * 256);
+		
+	color_printk(YELLOW,BLACK,"1:%#018lx,%#018lx\t\t\n",(unsigned long)tmp,*tmp);
+
+	tmp = Phy_To_Virt(*tmp & (~0xfffUL));
+
+	color_printk(YELLOW,BLACK,"2:%#018lx,%#018lx\t\t\n",(unsigned long)tmp,*tmp);
+
+	tmp = Phy_To_Virt(*tmp & (~0xfffUL));
+
+	color_printk(YELLOW,BLACK,"3:%#018lx,%#018lx\t\t\n",(unsigned long)tmp,*tmp);
+
+	for(i = 0;i < memory_management_struct.zones_size;i++)
+	{
+		struct Zone * z = memory_management_struct.zones_struct + i;
+		struct Page * p = z->pages_group;
+
+		if(ZONE_UNMAPED_INDEX && i == ZONE_UNMAPED_INDEX)
+			break;
+
+		for(j = 0;j < z->pages_length ; j++,p++)
+		{
+			
+			tmp = (unsigned long *)(((unsigned long)Phy_To_Virt((unsigned long)Global_CR3 & (~ 0xfffUL))) + (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_GDT_SHIFT) & 0x1ff) * 8);
+			
+			if(*tmp == 0)
+			{			
+				unsigned long * virtual = kmalloc(PAGE_4K_SIZE,0);
+				set_mpl4t(tmp,mk_mpl4t(Virt_To_Phy(virtual),PAGE_KERNEL_GDT));
+			}
+
+			tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~ 0xfffUL)) + (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_1G_SHIFT) & 0x1ff) * 8);
+			
+			if(*tmp == 0)
+			{
+				unsigned long * virtual = kmalloc(PAGE_4K_SIZE,0);
+				set_pdpt(tmp,mk_pdpt(Virt_To_Phy(virtual),PAGE_KERNEL_Dir));
+			}
+
+			tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~ 0xfffUL)) + (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_2M_SHIFT) & 0x1ff) * 8);
+
+			set_pdt(tmp,mk_pdt(p->PHY_address,PAGE_KERNEL_Page));
+
+			if(j % 50 == 0)
+				color_printk(GREEN,BLACK,"@:%#018lx,%#018lx\t\n",(unsigned long)tmp,*tmp);
+		}
+	}
+
+	flush_tlb();
 }
